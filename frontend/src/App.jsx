@@ -1,11 +1,27 @@
 import {ResponsiveBar, MainSection, Modal} from "./components";
-import { useReducer } from 'react';
-import StoreContext, {reducer} from "./store";
+import { useReducer, useEffect } from 'react';
+import StoreContext, {reducer,LOAD_PROJECTS,LOAD_TASKS} from "./store";
 import AuthProvider from "./Auth";
+import apiFetch from "./api";
 
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer,initState);
+  const token = localStorage.getItem("authToken");
+  
+  useEffect(()=>async()=>{
+    try{
+      let projects = await apiFetch('/projects', 'GET', null,token);
+      dispatch(LOAD_PROJECTS(projects))
+      if (projects.length > 0) {
+        const stProject = projects[0]
+        let data = await apiFetch('/projects/'+stProject.id+'/tasks', 'GET', null,token);
+        dispatch(LOAD_TASKS(stProject.id, data.tasks))
+      }
+    }catch(err){
+      console.log(err)
+    }
+  },[])
   
   return (
   <AuthProvider>
@@ -22,52 +38,17 @@ export default function App() {
 
 const initState = {
   "tasks":{
-    "Backlog":[
-      {
-         "id": 1,
-         "name": "Login",
-         "description": "Create Login form",
-         "due": "2024-04-01",
-         "priority": "High"
-      },
-      {
-         "id": 3,
-         "name": "Profile",
-         "description": "Create Profile form",
-         "due": "2024-04-02",
-         "priority": "Medium"
-      },
-      {
-         "id": 4,
-         "name": "Dashboard",
-         "description": "Create Dashboard form",
-         "due": "2024-04-03",
-         "priority": "Low"
-      },
-      {
-         "id": 5,
-         "name": "Settings",
-         "description": "Create Settings form",
-         "due": "2024-04-04",
-         "priority": "High"
-      }
-     ], 
-    "In Progress": [
-      {
-        "id": 2,
-        "name": "Signup",
-        "description": "Create Signup form",
-        "due": "2024-03-04",
-        "priority": "High"
-      }
-    ], 
+    "Backlog":[], 
+    "In Progress": [], 
     "In Review": [],
     "Done": []
   },
+  "projects":[],
+  "activeProject":null,
   "activeTask":null,
   "modal":{
     "type": null,
     "show": false,
-    "container":null // in type of add item
+    "container":null // in type of add task
   }
 }

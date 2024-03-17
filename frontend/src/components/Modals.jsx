@@ -1,5 +1,8 @@
 import { useContext, useState } from "react";
 import StoreContext ,{ TOGGLE_MODAL, ADD_TASK} from "../store";
+import { AuthContext } from "../Auth"
+import { showToast } from "./Toast";
+import apiFetch from "../api";
 
 export const ModalTemplate = ({ children }) => {
   const { dispatch } = useContext(StoreContext);
@@ -31,24 +34,25 @@ export const ModalTemplate = ({ children }) => {
 
 export const AddTaskModal = ()=>{
   const {state,dispatch} = useContext(StoreContext)
+  const token = localStorage.getItem("authToken");
 
-  // get max id
-  let id = 0;
-  Object.keys(state.tasks).forEach(container=>{
-    state.tasks[container].forEach(task=>
-      task.id > id && (id = task.id)
-    )
-  })
-  id = id + 1
-
-  const [task,setTask] = useState({id:id})
+  const [task,setTask] = useState({project_id:state.activeProject})
 
   const handleChange = (e) => setTask({...task,[e.target.name]:e.target.value})
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if(!Object.values(task).every((v)=> v))return;
-    dispatch(ADD_TASK(task))
+    try{
+      const data = task
+      data.container = state.modal.container
+      data.order = state.tasks[data.container].length+1
+      const response = await apiFetch("/tasks",'POST',data,token);
+      data.id = response.id
+      dispatch(ADD_TASK(data))
+    }catch(err){
+      console.log(err)
+    }
   }
   return (
     <>
@@ -87,11 +91,24 @@ export const AddTaskModal = ()=>{
 
 export const LoginModal = ()=>{
   const { dispatch } = useContext(StoreContext);
+  const { login } = useContext(AuthContext);
   const [user,setUser] = useState({email:"",password:""})
 
   const handleChange  = e => {
     setUser({...user,[e.target.name]:e.target.value})
   };
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if(!Object.values(user).every((v)=> v))return; // check if all fields are not empty
+    if(login(user.email,user.password)){
+      // logged in close modal
+      showToast("success","You have been successfully signed in.")
+      dispatch(TOGGLE_MODAL({type:null,show:false}))
+    } else {
+      // showToast("error","You have been successfully signed out.")
+    }
+  }
 
   return (
     <>
@@ -105,7 +122,7 @@ export const LoginModal = ()=>{
           <label className="mb-2 block text-sm font-medium text-gray-900">Password</label>
           <input type="password"  name="password" placeholder="••••••••" className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 sm:text-sm" onInput={handleChange} required/>
         </div>
-        <button type="submit" onClick={()=> {console.log(user)}} className="bg-indigo-600 hover:bg-indigo-700 w-full rounded-lg px-5 py-2.5 text-center text-sm font-medium text-white">Sign in</button>
+        <button type="submit" onClick={handleSubmit} className="bg-indigo-600 hover:bg-indigo-700 w-full rounded-lg px-5 py-2.5 text-center text-sm font-medium text-white">Sign in</button>
         <p className="text-sm font-light text-gray-500">Don't have an account yet? <a href="#" onClick={()=>dispatch(TOGGLE_MODAL({type:'REGISTER',show:true}))} className="text-indigo-600 font-medium hover:underline">Sign up</a></p>
       </form>
     </>

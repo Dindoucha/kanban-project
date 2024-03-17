@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -11,10 +11,15 @@ import {
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import  StoreContext, { SET_ACTIVE_TASK, SWAP_TASKS, SWITCH_CONTAINER} from "../store";
 import Container from "./Container";
+import apiFetch from "../api"
 import { Item } from "./Sortable_item";
 
 const MainSection = () => {
   const {state,dispatch} = useContext(StoreContext);
+  const token = localStorage.getItem("authToken")
+  useEffect(() => {
+    apiFetch("/tasks/mass-update","POST",{tasks:state.tasks},token);
+  }, [state.tasks]);
 
   const sensors = useSensors(
     useSensor(PointerSensor,{
@@ -83,7 +88,6 @@ const MainSection = () => {
     }
 
     dispatch(SWITCH_CONTAINER(activeContainer,overContainer,active.id,newIndex,activeIndex))
-    
   }
 
   const handleDragEnd = (event) => {
@@ -121,10 +125,10 @@ const MainSection = () => {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
         >
-        <Container id="Backlog" items={state.tasks["Backlog"]} />
-        <Container id="In Progress" items={state.tasks["In Progress"]} />
-        <Container id="In Review" items={state.tasks["In Review"]} />
-        <Container id="Done" items={state.tasks["Done"]} />
+        <Container id="Backlog" items={state.tasks?.["Backlog"] || []} />
+        <Container id="In Progress" items={state.tasks?.["In Progress"] || []} />
+        <Container id="In Review" items={state.tasks?.["In Review"] || []} />
+        <Container id="Done" items={state.tasks?.["Done"] || []} />
         <DragOverlay>{state.activeTask ? <Item item={state.activeTask} /> : null}</DragOverlay>
       </DndContext>
     </div>

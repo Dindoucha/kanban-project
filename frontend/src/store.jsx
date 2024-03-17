@@ -1,5 +1,6 @@
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
+
 const StoreContext = createContext();
 export default StoreContext;
 
@@ -72,10 +73,50 @@ export const reducer = (state,action) => {
           }  
         };
       }
+    case "ADD_PROJECT":{
+      const projectId = action.payload.projectId
+      const projects = [...state.projects,{"id":projectId}]
+      return {
+        ...state,
+        projects:projects,
+        activeProject:projects[0].id
+      }
+    }
+    case "DELETE_PROJECT":{
+      const projectId = action.payload.projectId
+      const projects = state.projects.filter(project=>project.id !== projectId)
+      return {
+        ...state,
+        projects:state.projects.filter(project=>project.id !== projectId),
+        activeProject:projects.shift()?.id || null
+      }
+    }
+    case "LOAD_PROJECTS":{
+      const projects = action.payload.projects
+      return {
+        ...state,
+        projects: projects
+      }
+    }
+    case "LOAD_TASKS":{
+      const {projectId,tasks} = action.payload
+      return {
+        ...state,
+        tasks:tasks,
+        activeProject:projectId
+      }
+    }
+    case "SWITCH_PROJECT":{
+      const {projectId} = action.payload
+      return {
+        ...state,
+        activeProject:projectId
+      }
+    }
     case "TOGGLE_MODAL":
       {
         return {...state, ["modal"]:action.payload.modal};
-      }
+    }
 
     default:
       return state;
@@ -84,6 +125,7 @@ export const reducer = (state,action) => {
 
 
 export const SET_ACTIVE_TASK = (activeTask) => {
+  // const {dispatch} = useContext()
   return {
     type: "ACTIVE_TASK",
     payload: {
@@ -143,3 +185,42 @@ export const TOGGLE_MODAL = (modal) => {
   };
 }
 
+export const ADD_PROJECT = (projectId) => {
+  return {
+    type: "ADD_PROJECT",
+    payload: {projectId}
+  };
+}
+
+export const DELETE_PROJECT = (projectId) => {
+  return {
+    type: "DELETE_PROJECT",
+    payload: {projectId}
+  };
+}
+
+export const LOAD_PROJECTS = (projects) => {
+  return {
+    type: "LOAD_PROJECTS",
+    payload: {projects}
+  };
+}
+
+export const LOAD_TASKS = (projectId,tasks) => {
+  return {
+    type: "LOAD_TASKS",
+    payload: {
+      projectId,
+      tasks
+    }
+  };
+}
+
+export const SWITCH_PROJECT = (projectId) => {
+  return {
+    type: "SWITCH_PROJECT",
+    payload: {
+      projectId
+    }
+  };
+}
