@@ -47,7 +47,7 @@ def mass_update():
             task = Task.query.get_or_404(task_id)
             if task.project.user_id != current_user_id:
                 return jsonify({"message": "Unauthorized action."}), 403
-            task.name=task_data.get("name")
+            task.order=task_data.get("order")
             task.container=container
             task.save()
     return jsonify({"message": "Tasks updated successfully"})
