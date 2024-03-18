@@ -40,6 +40,10 @@ class Project(db.Model):
     db.session.add(self)
     db.session.commit()
 
+  def delete(self):
+    db.session.delete(self)
+    db.session.commit()
+
 class Task(db.Model):
   __tablename__ = 'tasks'
   id = db.Column(db.Integer, primary_key=True)
@@ -65,4 +69,8 @@ class Task(db.Model):
   
   def save(self):
     db.session.add(self)
+    db.session.commit()
+
+  def delete(self):
+    db.session.delete(self)
     db.session.commit()
