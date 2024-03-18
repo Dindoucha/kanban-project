@@ -45,7 +45,7 @@ class TaskController extends Controller
                 }
                 
                 $task->update([
-                    "name" => $order,
+                    "order" => $order,
                     "container" => $container
                 ]);
                 $order++;
