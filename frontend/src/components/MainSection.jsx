@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -18,7 +18,8 @@ const MainSection = () => {
   const {state,dispatch} = useContext(StoreContext);
   const token = localStorage.getItem("authToken")
   useEffect(() => {
-    apiFetch("/tasks/mass-update","POST",{tasks:state.tasks},token);
+    
+    if (state.activeProject) {apiFetch("/tasks/mass-update","POST",{tasks:state.projects[state.activeProject].tasks},token);}
   }, [state.modal.container,state.activeTask]);
 
   const sensors = useSensors(
@@ -36,11 +37,11 @@ const MainSection = () => {
   );
   
   const findContainer = (id) => {
-    if (id in state.tasks) {
+    if (id in state.projects?.[state.activeProject]?.tasks) {
       return id;
     }
   
-    return Object.keys(state.tasks).find((key) => state.tasks[key].some(item=>item.id === id));
+    return Object.keys(state.projects[state.activeProject].tasks).find((key) => state.projects[state.activeProject].tasks[key].some(item=>item.id === id));
   }
 
   const handleDragStart = (event) => {
@@ -48,7 +49,7 @@ const MainSection = () => {
     const { id } = active;
     const activeContainer = findContainer(id)
 
-    dispatch(SET_ACTIVE_TASK(state.tasks[activeContainer].find(item=>item.id === id)));
+    dispatch(SET_ACTIVE_TASK(state.projects[state.activeProject].tasks[activeContainer].find(item=>item.id === id)));
   }
 
   const handleDragOver = (event) => {
@@ -67,14 +68,14 @@ const MainSection = () => {
       return;
     }
 
-    const activeItems = state.tasks[activeContainer];
-    const overItems = state.tasks[overContainer];
+    const activeItems = state.projects[state.activeProject].tasks[activeContainer];
+    const overItems = state.projects[state.activeProject].tasks[overContainer];
 
     const activeIndex = activeItems.findIndex(item=>item.id === id);
     const overIndex = overItems.findIndex(item=>item.id === overId);
 
     let newIndex;
-    if (overId in state.tasks) {
+    if (overId in state.projects[state.activeProject].tasks) {
       newIndex = overItems.length + 1;
     } else {
       const isBelowLastItem =
@@ -106,16 +107,10 @@ const MainSection = () => {
       return;
     }
 
-    const activeIndex = state.tasks[activeContainer].findIndex(item=>item.id === id);
-    const overIndex = state.tasks[overContainer].findIndex(item=>item.id === overId);
-
-    if (activeIndex !== overIndex) {
-      dispatch(SWAP_TASKS(activeIndex,overIndex,activeContainer));
-    }
-
+    dispatch(SWAP_TASKS(id,overId,activeContainer));
     dispatch(SET_ACTIVE_TASK(null));
   }
-
+  console.log("hh",state.projects?.[state.activeProject]?.tasks)
   return (
     <div className="grid grid-cols-2 sm:grid-rows-1 grid-rows-2 sm:grid-cols-4 gap-4 p-4 bg-gray-900 h-[calc(100dvh-3.5rem)] sm:h-screen w-full">
       <DndContext
@@ -125,10 +120,10 @@ const MainSection = () => {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
         >
-        <Container id="Backlog" items={state.tasks?.["Backlog"] || []} />
-        <Container id="In Progress" items={state.tasks?.["In Progress"] || []} />
-        <Container id="In Review" items={state.tasks?.["In Review"] || []} />
-        <Container id="Done" items={state.tasks?.["Done"] || []} />
+        <Container id="Backlog" items={state.projects?.[state.activeProject]?.tasks?.["Backlog"] || []} />
+        <Container id="In Progress" items={state.projects?.[state.activeProject]?.tasks?.["In Progress"] || []} />
+        <Container id="In Review" items={state.projects?.[state.activeProject]?.tasks?.["In Review"] || []} />
+        <Container id="Done" items={state.projects?.[state.activeProject]?.tasks?.["Done"] || []} />
         <DragOverlay>{state.activeTask ? <Item item={state.activeTask} /> : null}</DragOverlay>
       </DndContext>
     </div>

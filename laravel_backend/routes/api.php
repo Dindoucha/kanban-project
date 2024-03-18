@@ -32,7 +32,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     });
 
     Route::apiResource('projects', ProjectController::class);
-    Route::get('/projects/{project}/tasks', [ProjectController::class, 'tasks']);
     Route::apiResource('tasks', TaskController::class);
     Route::post('/tasks/mass-update', [TaskController::class, 'massUpdate']);
 

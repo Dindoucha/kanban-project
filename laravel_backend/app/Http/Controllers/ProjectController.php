@@ -15,6 +15,19 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = Auth::user()->projects;
+        foreach($projects as $project){
+            $backlog = Task::where("project_id",$project->id)->where("container","Backlog")->orderBy('order')->get();
+            $in_progress = Task::where("project_id",$project->id)->where("container","In Progress")->orderBy('order')->get();
+            $in_review = Task::where("project_id",$project->id)->where("container","In Review")->orderBy('order')->get();
+            $done = Task::where("project_id",$project->id)->where("container","Done")->orderBy('order')->get();
+            $project->tasks = [
+                "Backlog"=>$backlog,
+                "In Progress"=>$in_progress,
+                "In Review"=>$in_review,
+                "Done"=>$done,
+            ];
+        }
+
         return response()->json($projects);
     }
 
@@ -39,24 +52,5 @@ class ProjectController extends Controller
         }
         $project->delete();
         return response(["message"=>"deleted"]);
-    }
-
-    public function tasks(Project $project)
-    {
-        if(Auth::user()->id !== $project->user_id){
-            abort(403, 'Unauthorized action.');
-        }
-
-        $backlog = Task::where("project_id",$project->id)->where("container","Backlog")->orderBy('order')->get();
-        $in_progress = Task::where("project_id",$project->id)->where("container","In Progress")->orderBy('order')->get();
-        $in_review = Task::where("project_id",$project->id)->where("container","In Review")->orderBy('order')->get();
-        $done = Task::where("project_id",$project->id)->where("container","Done")->orderBy('order')->get();
-
-        return response()->json(["tasks"=>[
-            "Backlog"=>$backlog,
-            "In Progress"=>$in_progress,
-            "In Review"=>$in_review,
-            "Done"=>$done,
-            ]]);
     }
 }

@@ -1,7 +1,7 @@
 import { AuthContext } from "../Auth"
 import { useContext, useState } from "react"
 import { FaRegUser, FaFolderPlus, FaFolder, FaFolderMinus, FaGithub    } from "react-icons/fa";
-import StoreContext, {TOGGLE_MODAL, ADD_PROJECT, DELETE_PROJECT, SWITCH_PROJECT, LOAD_TASKS} from "../store";
+import StoreContext, {TOGGLE_MODAL, ADD_PROJECT, DELETE_PROJECT, SWITCH_PROJECT} from "../store";
 import apiFetch from "../api";
 
 const ResponsiveBar = () => {
@@ -114,8 +114,6 @@ const ProjectsList = () => {
     try{
       const found = state.projects.find(project=>project.id===projectId)
       if (found===-1)throw(Error('No such project'));
-      let data = await apiFetch('/projects/'+projectId+'/tasks', 'GET', null,token);
-      dispatch(LOAD_TASKS(projectId,data.tasks))
       dispatch(SWITCH_PROJECT(projectId));
     } catch (err) {
       console.log(err)

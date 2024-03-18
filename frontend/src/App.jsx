@@ -1,28 +1,25 @@
 import {ResponsiveBar, MainSection, Modal} from "./components";
 import { useReducer, useEffect } from 'react';
-import StoreContext, {reducer,LOAD_PROJECTS,LOAD_TASKS} from "./store";
-import AuthProvider from "./Auth";
+import StoreContext, { reducer,LOAD_PROJECTS } from "./store";
+import AuthProvider, { AuthContext } from "./Auth";
 import apiFetch from "./api";
 
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer,initState);
+  const [isAuthenticated] = useReducer(AuthContext);
   const token = localStorage.getItem("authToken");
 
   const get_projects = async()=>{
     try{
       let projects = await apiFetch('/projects', 'GET', null,token);
+      console.log(projects)
       dispatch(LOAD_PROJECTS(projects))
-      if (projects.length > 0) {
-        const stProject = projects[0]
-        let data = await apiFetch('/projects/'+stProject.id+'/tasks', 'GET', null,token);
-        dispatch(LOAD_TASKS(stProject.id, data.tasks))
-      }
     }catch(err){
       console.log(err)
     }
   }
-  useEffect(()=>{get_projects()},[state.activeProject])
+  useEffect(()=>{get_projects()},[])
   
   return (
   <AuthProvider>

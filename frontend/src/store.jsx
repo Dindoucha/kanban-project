@@ -15,12 +15,12 @@ export const reducer = (state,action) => {
       {
         const newTask = action.payload.newTask;
         const container = state.modal.container;
+        const projects = [...state.projects]
+        const index = projects.findIndex(project=>project.id === state.activeProject)
+        projects[index][container].push(newTask)
         return {
           ...state,
-          tasks:{
-            ...state.tasks,
-            [container]: [...state.tasks[container],newTask]
-          },
+          projects:projects,
           modal:{
             type: null,
             show: false,
@@ -32,27 +32,35 @@ export const reducer = (state,action) => {
       {
         const {taskId} = action.payload;
         const container = Object.keys(state.tasks).find((key) => state.tasks[key].some(task=>task.id === taskId));
+        const projects = [...state.projects]
+        const index = projects.findIndex(project=>project.id === state.activeProject)
         return {
           ...state,
           tasks:{
             ...state.tasks,
-            [container]: [...state.tasks[container].filter((task) => task.id !== taskId)]
+            [container]: projects[index][container].filter((task) => task.id !== taskId)
           }
         };
       }
     case "SWAP_TASKS":
       {
-        const {activeIndex,overIndex,overContainer} = action.payload
+        const {activeId,overId,overContainer} = action.payload
+        const projects = [...state.projects]
+        const index = projects.findIndex(project=>project.id === state.activeProject)
+        const activeIndex = state.tasks[activeContainer].findIndex(item=>item.id === activeId);
+        const overIndex = state.tasks[overContainer].findIndex(item=>item.id === overId);
+        if (activeIndex === overIndex) {
+          return state
+        }
+          
+        projects[index][overContainer]=arrayMove(
+          projects[index][overContainer][overContainer],
+          activeIndex,
+          overIndex
+        )
         return {
           ...state,
-          tasks:{
-            ...state.tasks,
-            [overContainer]:arrayMove(
-              state.tasks[overContainer],
-              activeIndex,
-              overIndex
-            )
-          }
+          projects:projects
         }
       }
     case "SWITCH_CONTAINER":
@@ -75,7 +83,12 @@ export const reducer = (state,action) => {
       }
     case "ADD_PROJECT":{
       const projectId = action.payload.projectId
-      const projects = [...state.projects,{"id":projectId}]
+      const projects = [...state.projects,{"id":projectId,"tasks":{
+        "Backlog":[], 
+        "In Progress": [], 
+        "In Review": [],
+        "Done": []
+      }}]
       return {
         ...state,
         projects:projects,
@@ -95,15 +108,8 @@ export const reducer = (state,action) => {
       const projects = action.payload.projects
       return {
         ...state,
-        projects: projects
-      }
-    }
-    case "LOAD_TASKS":{
-      const {projectId,tasks} = action.payload
-      return {
-        ...state,
-        tasks:tasks,
-        activeProject:projectId
+        projects: projects,
+        activeProject:projects.shift()?.id || null
       }
     }
     case "SWITCH_PROJECT":{
@@ -152,12 +158,12 @@ export const DELETE_TASK = (taskId) => {
   };
 }
 
-export const SWAP_TASKS = (activeIndex, overIndex, overContainer) => {
+export const SWAP_TASKS = (activeId, overId, overContainer) => {
   return {
     type: "SWAP_TASKS",
     payload:{
-      activeIndex,
-      overIndex,
+      activeId,
+      overId,
       overContainer
     }
   }
@@ -206,15 +212,7 @@ export const LOAD_PROJECTS = (projects) => {
   };
 }
 
-export const LOAD_TASKS = (projectId,tasks) => {
-  return {
-    type: "LOAD_TASKS",
-    payload: {
-      projectId,
-      tasks
-    }
-  };
-}
+
 
 export const SWITCH_PROJECT = (projectId) => {
   return {
