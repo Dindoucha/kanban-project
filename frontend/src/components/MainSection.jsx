@@ -19,7 +19,7 @@ const MainSection = () => {
   const token = localStorage.getItem("authToken")
   useEffect(() => {
     apiFetch("/tasks/mass-update","POST",{tasks:state.tasks},token);
-  }, [state.tasks]);
+  }, [state.modal.container,state.activeTask]);
 
   const sensors = useSensors(
     useSensor(PointerSensor,{

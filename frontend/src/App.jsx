@@ -8,8 +8,8 @@ import apiFetch from "./api";
 export default function App() {
   const [state, dispatch] = useReducer(reducer,initState);
   const token = localStorage.getItem("authToken");
-  
-  useEffect(()=>async()=>{
+
+  const get_projects = async()=>{
     try{
       let projects = await apiFetch('/projects', 'GET', null,token);
       dispatch(LOAD_PROJECTS(projects))
@@ -21,7 +21,8 @@ export default function App() {
     }catch(err){
       console.log(err)
     }
-  },[])
+  }
+  useEffect(()=>{get_projects()},[state.activeProject])
   
   return (
   <AuthProvider>

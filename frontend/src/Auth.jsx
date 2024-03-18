@@ -6,8 +6,7 @@ export const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const token = localStorage.getItem("authToken");
-
-  useEffect(() => async() =>{
+  const ping = async() =>{
     try{
       await apiFetch('/ping', 'GET', null,token);
       setIsAuthenticated(true)
@@ -15,7 +14,8 @@ const AuthProvider = ({ children }) => {
       localStorage.removeItem("authToken");
       setIsAuthenticated(false)
     }
-  },[])
+  }
+  useEffect(() =>{ ping()} ,[])
   
   const login = async (email, password) => {
     try {

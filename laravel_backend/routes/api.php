@@ -4,7 +4,6 @@ namespace  App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +18,8 @@ use Illuminate\Support\Facades\Auth;
 
 
 // Login Route
-Route::post('/login', )->name("login");
+Route::post('/login',[AuthController::class,"login"])->name("login");
+Route::post('/signup',[AuthController::class,"signup"]);
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/ping', function (Request $request) {
